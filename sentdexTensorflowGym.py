@@ -2,8 +2,8 @@ import gym
 import random
 import numpy as np
 import tflearn
-#from tflearn.layers.core import input_data, dropout, fully_connected
-#from tflearn.layers.estimator import regression
+from tflearn.layers.core import input_data, dropout, fully_connected
+from tflearn.layers.estimator import regression
 from statistics import mean, median
 from collections import Counter
 
@@ -31,7 +31,7 @@ def some_random_games_first():
           
 #some_random_games_first()
                
-def initial_popluation():
+def initial_population():
     training_data= []
     scores =[]
     accepted_scores = []
@@ -53,7 +53,7 @@ def initial_popluation():
         if score >=score_requirement:
             accepted_scores.append(score)
             for data in game_memory:
-                if data[1]==1:
+                if data[1] == 1:
                     output =[0,1]
 
                 elif data[1] == 0:
@@ -73,8 +73,8 @@ def initial_popluation():
     return training_data
 
  
-#initial_popluation()
-...
+#initial_population()
+
 def neural_network_model(input_size):
      network = input_data(shape= [None, input_size,1], name='input')
 
@@ -101,25 +101,22 @@ def neural_network_model(input_size):
 
      return model
 
- 
+
 
 def train_model(training_data, model=False):
-    X=np.array(i[0] for i in training_data).reshape(-1, len(training_data[0][0]),1)
+    X=np.array([i[0] for i in training_data]).reshape(-1, len(training_data[0][0]),1)
     y= [i[1] for i in training_data]
 
     if not model:
         model=neural_network_model(input_size =len(X[0]))
 
-    model.fit({'input':X}, {'target':y}, n_epoch=5, snapshot_step=500, show_metric=True,
-              run_id='openaistuff')
+    model.fit({'input':X}, {'targets':y}, n_epoch=5, snapshot_step=500,
+              show_metric=True,run_id='openaistuff')
     return model
 
 training_data = initial_population()
 model=train_model(training_data)
  
-
- 
-
  
 
 scores = []
@@ -127,30 +124,30 @@ choices =[]
 
 for each_game in range(10):
     score =0
-    game_memeory = []
+    game_memory = []
     prev_obs= []
     env.reset()
     for _ in range(goal_steps):
-        env.render()
+        #env.render()
         if len(prev_obs) == 0:
             action =random.randrange(0,2)
+            print('random play')
         else:
-            action = np.armax(model.predict(prev_obs.reshape(-1,len(prev_obs),1)[0]))
-            choices.append(action)
+            action = np.argmax(model.predict(prev_obs.reshape(-1,len(prev_obs),1))[0])
+        choices.append(action)
+        new_observation, reward, done, info = env.step(action)    
+        prev_obs=new_observation
+        game_memory.append([new_observation, action])
+        score+= reward
+        if done:
+           break
+    scores.append(score)
 
-            new_observation, reward, done, info = env.step(action)
-            pre_obs=new_obeservation
-            game.memory.append([new_observation, action])
-            score+= reward
-            if done:
-                break
-        scores.append(score)
+#print(scores)
 
-print('Average Score', sum(scores)/len(socres))
-print('Choice 1:{}, choice 2: {}'.format(choices.count(1)/len(scores)),
-choices.count(0)/len(choices))
-...         
-   
+print('Average Score', sum(scores)/len(scores))
+print('Choice 1:{}, choice 2: {}'.format(choices.count(1)/len(scores),
+choices.count(0)/len(choices)))
 
  
 
